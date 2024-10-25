@@ -1,0 +1,8 @@
+deployment:
+  name: hackathontrainservice
+  replicas: 1
+  image: sadatul/hackathon_train_service
+  tag: <!IMAGE>
+  port: 3003
+  host: api.prod.pinklifeline.xyz
+  database: database-instance-prod

@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hackathon
+  name: {{ deployment.name }}
+  namespace: default
+spec:
+  replicas: {{ deployment.replicas }}
+  minReadySeconds: 45
+  selector:
+    matchLabels:
+      app: {{ deployment.name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ deployment.name }}
+    spec:
+      serviceAccountName: "ksa"
+      containers:
+        - name: {{ deployment.name }}
+          image: {{ deployment.image }}:{{ deployment.tag }}
+          imagePullPolicy: Always
+          ports:
+            - name: liveness-port
+              containerPort: {{ deployment.port }}
+          env:
+            - name: TZ
+              value: Asia/Dhaka
+            - name: RMQ_URL
+              value: amqp://guest:guest@rabbitmq:5672
+            - name: DB_TYPE
+              value: mysql
+            - name: DB_HOST
+              value: localhost
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USERNAME
+              value: prod
+            - name: DB_PASSWORD
+              value: hackathon
+            - name: DB_NAME
+              value: authservice-database
+            - name: HEALTH_CHECK_PORT
+              value: "{{ deployment.port }}"
+          resources:
+            requests:
+              cpu: 50m
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: liveness-port
+            failureThreshold: 5
+            periodSeconds: 600
+            initialDelaySeconds: 60
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: liveness-port
+            failureThreshold: 5
+            periodSeconds: 600
+            initialDelaySeconds: 60
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+          ports:
+            - containerPort: 3306
+          args:
+            - "--private-ip"
+            - "--structured-logs"
+            - "--port=3306"
+            - "hackathon-438400:asia-southeast1:{{ deployment.database }}"
+#            - "--credentials-file=/secrets/sm-sa.json"
+          securityContext:
+            runAsNonRoot: true
+#          volumeMounts:
+#            - name: sa-secret-volume
+#              mountPath: /secrets/
+#              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu:    "50m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: otel-config
+          items:
+          - key: config.yaml
+            path: config.yaml
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
