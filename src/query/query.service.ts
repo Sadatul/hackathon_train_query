@@ -21,6 +21,33 @@ export class QueryService {
         @InjectRepository(BookingInfo) private bookingInfoRepository: Repository<BookingInfo>,
     ) { }
 
+    async getPurchasedSeats(userId: number) {
+        // get the booking info for the user
+        const user = await this.bookingInfoRepository.findOne({ where: { id: userId } });
+        const bookingInfo = await this.bookingInfoRepository.find({
+            where: { user: user }
+        });
+
+        // get the seat info for the booking info
+        const result = []
+
+        for (const booking of bookingInfo) {
+            const seat = await this.seatInfoRepository.findOne({ where: { id: booking.seat.id } });
+            const train = await this.trainInfoRepository.findOne({ where: { id: seat.train.id } });
+            result.push({
+                bookingId: booking.id,
+                seatId: seat.id,
+                class: seat.class,
+                fare: seat.fare,
+                status: booking.status,
+                trainId: train.id,
+                trainName: train.name,
+                journeyDate: booking.journeyDate
+            });
+        }
+        return result;
+    }
+
     // async queryTrain(query: queryType) {
     //     const { from, to, journeyDate } = query;
 
