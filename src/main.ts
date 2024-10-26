@@ -10,11 +10,11 @@ async function bootstrap() {
       urls: [process.env.RMQ_URL],
       queue: process.env.RMQ_QUEUE,
       queueOptions: {
-        durable: false
+        durable: true
       },
     },
   });
   await app.startAllMicroservices();
-  await app.listen(process.env.HEALTH_CHECK_PORT, ()=>{console.log(`Health check service is running on ${process.env.HEALTH_CHECK_PORT}`)});
+  await app.listen(process.env.HEALTH_CHECK_PORT, () => { console.log(`Health check service is running on ${process.env.HEALTH_CHECK_PORT}`) });
 }
 bootstrap();

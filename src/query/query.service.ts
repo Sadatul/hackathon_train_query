@@ -136,13 +136,13 @@ export class QueryService {
         // Construct the final result
         return results.map(schedule => {
             const train = schedule.train;
-            const seats = train.seats.map(async seat => {
+            const seats = train.seats.map(seat => {
                 const booking = seat.bookings[0]; // Since booking is already filtered by journeyDate
                 const curretTime = new Date().getTime();
                 const expirationTime = booking ? booking.expirationTime?.getTime() : null;
                 // check if the expiration time is passed and then delete if it is
                 if (booking && expirationTime && curretTime > expirationTime && booking.status === 'Booked') {
-                    await this.bookingInfoRepository.remove(booking);
+                    this.bookingInfoRepository.remove(booking);
                     return {
                         seatId: seat.id,
                         class: seat.class,

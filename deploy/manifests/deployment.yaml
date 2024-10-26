@@ -48,6 +48,8 @@ spec:
               value: authservice-database
             - name: HEALTH_CHECK_PORT
               value: "{{ deployment.port }}"
+            - name: RMQ_QUEUE
+              value: hackathonQueue_train_queue
           resources:
             requests:
               cpu: 50m
